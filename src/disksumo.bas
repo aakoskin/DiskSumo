@@ -1,6 +1,6 @@
    10 goto 8910
   100 rem --dump disk to rs232--
-  110 m=fre(0):m=24576:t=1:s=0:b=1
+  110 b=1
   120 gosub 8010:print "{home}{grn}ready. start xmodem on other computer";
   130 for w=-1 to 0:get#4,a$:w=a$<>k$:next
   140 print "{home}                                      ";
@@ -8,8 +8,7 @@
   160 i=1:for w=-1 to 0:print "{home}{yel}eot";i;"{left}     ";:print#4,chr$(4);
   170 d=1:gosub 30000:get#4,a$:i=i+1:w=(i<=10)and(a$<>c$):next:return
   200 rem ---receive character---
-  210 x=peek(r)
-  220 for w=-1 to 0:get#4,a$:d=d-1:w=peek(r)=x and d>0:next:a$=a$+n$:return
+  210 x=peek(r):for w=-1 to 0:get#4,a$:d=d-1:w=peek(r)=x and d>0:next:a$=a$+n$:return
   400 rem --update display--
   410 poke 55296+(t-1)+40*(s+1),co:poke 1024+(t-1)+40*(s+1),sy:return
   500 rem --calc max sec# for trk#t--
@@ -45,7 +44,7 @@
  2010 print "{home}{yel}b";b;"{left}      {left}{left}{left}{left}{left}";
  2020 print#4,s$;chr$(b);chr$(by-b);
  2030 ck=0:for i=mo to mo+127:print#4,chr$(peek(i));:ck=(ck+peek(i))and by:next
- 2040 print#4,chr$(ck);:for w=-1 to 0:get#4,a$:w=a$="":next
+ 2040 print#4,chr$(ck);:for w=0 to 1:get#4,a$:w=len(a$):next
  2050 if a$=k$ then print"nak":goto 2010
  2060 if a$<>c$ then print asc(a$):goto 2010
  2070 print "ack":b=(b+1)and by:return
@@ -64,20 +63,18 @@
  8050 for i=1 to 2:print "ZZZZZZZZZZZZZZZZZ":next
  8060 return
  8800 rem ---1200 bps---
- 8810 close 4:open 4,2,0,chr$(8)+chr$(0)
- 8820 goto 8920
+ 8810 close 4:open 4,2,0,chr$(8)+chr$(0):goto 8920
  8900 rem ---initialize---
  8910 close 4:open 4,2,0,chr$(6)+chr$(0)
- 8920 poke 52,96:poke 56,96:i=0:x=0:a$="  ":b$="  "
- 8930 m=24576:t=1:s=0:b=1:can=24:ck=0
- 8940 s$=chr$(1):c$=chr$(6):k$=chr$(21)
- 8950 r=668:n$=chr$(0):by=255:ft=1
- 8960 br=peek(659)and 15:if br<>8 then br=6
+ 8920 poke 52,96:poke 51,0:poke 56,96:poke 55,0
+ 8930 a$="  ":b=1:b$=" ":by=255:c=0:c$=chr$(6):can=24:ck=0:d=0:ft=1:i=0
+ 8940 k$=chr$(21):m=24576:n$=chr$(0):r=668:s=0:s$=chr$(1):t=1:w=0:x=0
+ 8950 br=peek(659)and 15:if br<>8 then br=6
  9000 rem ---main menu---
  9010 print "{clr}{cyn}";:poke 53280,0:poke 53281,0
  9020 print "disksumo v1.0, jul 26 2007"
  9025 print "chris pressey, cat's eye technologies"
- 9026 print "2304 patch by aakoskin, bitwoods rbbs"
+ 9026 print "2510 patch by aakoskin, bitwoods rbbs"
  9027 print "this program is in the public domain"
  9030 print "{down}{down}{down}";spc(16);"main menu"
  9035 print spc(16);"{CBM-T}{CBM-T}{CBM-T}{CBM-T} {CBM-T}{CBM-T}{CBM-T}{CBM-T}"
@@ -120,7 +117,7 @@
  15010 close 4
  15020 end
  20000 rem --dump rs232 to disk--
- 20010 t=1:s=0:b=1:p=1
+ 20010 b=1
  20020 print "{clr}insert a formatted floppy,"
  20030 print "start xmodem on the other computer,"
  20040 print "and press {wht}s{cyn} to start.";
@@ -128,15 +125,15 @@
  20060 gosub 8010:gosub 20710:print#4,k$;:for t=ft to 35:gosub 510
  20070 gosub 20510:gosub 20610:gosub 20210:next:gosub 20910:return
  20200 rem ---xmodem ack---
- 20210 print#4,c$;:p=(p+1)and by:return
+ 20210 print#4,c$;:b=(b+1)and by:return
  20300 rem ---receive xmodem packet---
  20310 d=300:gosub 210:if a$<>s$+n$ then 20410
- 20320 gosub 210:if asc(a$)<>p then 20410
- 20330 gosub 210:if asc(a$)+p<>by then 20410
- 20340 ck=0:for i=mo to mo+127:gosub 210:d=asc(a$):ck=(ck+d)and by:poke i,d:next
+ 20320 gosub 210:if asc(a$)<>b then 20410
+ 20330 gosub 210:if asc(a$)+b<>by then 20410
+ 20340 ck=0:for i=mo to mo+127:gosub 210:c=asc(a$):ck=(ck+c)and by:poke i,c:next
  20350 gosub 210:if asc(a$)<>ck then 20410
  20360 if sa then return
- 20370 print#4,c$;:p=(p+1)and by:return
+ 20370 goto 20210
  20400 rem ---xmodem nak---
  20410 d=10:gosub 30010:gosub 20710:print#4,k$;:goto 20310
  20500 rem ---receive track---
